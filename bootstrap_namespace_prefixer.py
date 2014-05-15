@@ -158,7 +158,8 @@ if __name__ == '__main__':
 
     bsTopDir = sys.argv[1]
     cssClassNames = None
-    for cssFile in ('bootstrap.css', 'bootstrap.min.css', 'bootstrap-responsive.css', 'bootstrap-responsive.min.css'):
+    for cssFile in ('bootstrap.css', 'bootstrap.min.css', 'bootstrap-responsive.css', 'bootstrap-responsive.min.css',
+                    'bootstrap-theme.css', 'bootstrap-theme.min.css'):
         cssFilePath = os.path.normpath(os.path.join(args.css, cssFile))
         processCss(cssFilePath)
         if cssClassNames == None:
