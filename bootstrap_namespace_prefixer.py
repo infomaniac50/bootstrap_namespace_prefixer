@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 """ Add a configurable prefix to the specified css and js Bootstrap files (also work with minified version)
 @author Francois Aucamp <francois.aucamp@gmail.com>
 @license GPLv2+
@@ -17,16 +17,19 @@ DEFAULT_CSS_CLASS_PREFIX = 'bs-'
 ADDITIONAL_CSS_CLASSES_IN_JS = ['collapsed']
 
 # Note: regex uses semi-Python-specific \n (newline) character
-#CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n\}\(]*[\{,])') # e.g: .classname {
-CSS_CLASS_REGEX = re.compile(r'(?<!progid:DXImageTransform)(?<!progid:DXImageTransform.Microsoft)(?!\.png)\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n]*[\{,])') # e.g: .classname {
-CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX = re.compile(r'(\[\s*class\s*[~|*^]?=\s*"\s*)([a-zA-Z][a-zA-Z0-9-_]+\w*)(")(?=[^\{,\n\}]*[\{,])') # e.g: [class~="someclass-"]
+# CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n\}\(]*[\{,])') # e.g: .classname {
+CSS_CLASS_REGEX = re.compile(
+    r'(?<!progid:DXImageTransform)(?<!progid:DXImageTransform.Microsoft)(?!\.png)\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n]*[\{,])')  # e.g: .classname {
+CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX = re.compile(
+    r'(\[\s*class\s*[~|*^]?=\s*"\s*)([a-zA-Z][a-zA-Z0-9-_]+\w*)(")(?=[^\{,\n\}]*[\{,])')  # e.g: [class~="someclass-"]
 JS_CSS_CLASS_REGEX_TEMPLATE = r"""(?<!(.\.on|\.off))(\(['"][^'"]*\.)(%s)([^'"]*['"]\))"""
 JS_JQUERY_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)\(['"])(%s)(['"])"""
 JS_JQUERY_REGEX_TEMPLATE_VAR = r"""((addClass|removeClass|hasClass|toggleClass)\()([a-zA-Z0-9]+)(\))"""
 JS_JQUERY_REGEX_TEMPLATE_LIST = r"""((addClass|removeClass|hasClass|toggleClass)\(\[)([^\]]*)(\])"""
-JS_JQUERY_REGEX_STRING_MULTIPLE = re.compile(r"""((addClass|removeClass|hasClass|toggleClass)\(['"]\s*)(([^'"\s]+\s+)+[^'"]+)(\s*['"]\))""") # e.g: removeClass('fade in top bottom')
+JS_JQUERY_REGEX_STRING_MULTIPLE = re.compile(
+    r"""((addClass|removeClass|hasClass|toggleClass)\(['"]\s*)(([^'"\s]+\s+)+[^'"]+)(\s*['"]\))""")  # e.g: removeClass('fade in top bottom')
 # Regex for the conditional/more tricky add/remove/hasClass calls in the bootstrap.js source
-JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)'\]\(['"])(%s)(['"])""" # e.g: ? 'addClass' : 'removeClass']('someclass')
+JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)'\]\(['"])(%s)(['"])"""  # e.g: ? 'addClass' : 'removeClass']('someclass')
 JS_JQUERY_INLINE_IF_CONDITION_REGEX_TEMPLATE = r"""(\)\s*\?\s*['"])(%s)(['"]\s*:\s*['"]{2})"""
 # Regex for certain jquery selectors that might have been missed by the previous regexes
 JS_JQUERY_SELECTOR_REGEX_TEMPLATE = r"""(:not\(\.)(%s)(\))"""
@@ -34,31 +37,38 @@ JS_INLINE_HTML_REGEX_TEMPLATE = r"""(class="[^"]*)(?<=\s|")(%s)(?=\s|")"""
 # Some edge cases aren't easy to fix using generic regexes because of potential clashes with non-CSS code
 JS_EDGE_CASE_1_TEMPLATE = r"""(this\.\$element\[\s*\w+\s*\]\(['"]\s*)(%s)(['"]\s*\))"""
 
+
 def processCss(cssFilename):
     """ Adds the cssClassPrefix to each CSS class in the specified CSS file """
     print('Processing CSS file:', cssFilename)
     try:
         f = open(cssFilename)
     except IOError:
-        print(' Failed to open file; skipping:', cssFilename)
+        print(' |-> Failed to open file; skipping:', cssFilename)
+        print('---------------------------------------------------------')
     else:
         css = f.read()
         f.close()
-        processedFilename = cssFilename[:-4] + '.prefixed.css'
-        f = open(processedFilename, 'w')
+        processedFilename = os.path.splitext(os.path.basename(cssFilename))[0] + '.prefixed.css'
+        processedFilenamePath = os.path.normpath(os.path.join(args.cssdest, processedFilename))
+        f = open(processedFilenamePath, 'w')
         processedCss = CSS_CLASS_REGEX.sub(r'.%s\1' % cssClassPrefix, css)
         processedCss = CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX.sub(r'\1%s\2\3' % cssClassPrefix, processedCss)
         f.write(processedCss)
         f.close()
-        print(' Prefixed CSS file written as:', processedFilename)
+        print(' |-> Prefixed file written to: ' + processedFilenamePath)
+        print('---------------------------------------------------------')
+
 
 def collectCssClassnames(cssFilename):
     """ Returns a set of all the CSS class names in the specified CSS file """
     print('Collecting CSS classnames from file:', cssFilename)
+    print('---------------------------------------------------------')
     try:
         f = open(cssFilename)
     except IOError:
-        print(' Failed to open file; skipping:', cssFilename)
+        print(' |-> Failed to open file; skipping:', cssFilename)
+        print('---------------------------------------------------------')
     else:
         css = f.read()
         f.close()
@@ -66,6 +76,7 @@ def collectCssClassnames(cssFilename):
         # The "popover-inner" class is referred to in javascript, but not the CSS files - force prefixing for consistency
         classes.add('popover-inner')
         return classes
+
 
 def processJs(jsFilename, cssClassNames):
     """ Adds the cssClassPrefix to each CSS class in the specified JavaScript file.
@@ -75,9 +86,10 @@ def processJs(jsFilename, cssClassNames):
     try:
         f = open(jsFilename)
     except IOError:
-        print(' Failed to open file; skipping:', jsFilename)
+        print(' |-> Failed to open file; skipping:', jsFilename)
+        print('---------------------------------------------------------')
     else:
-        regexClassNamesAlternatives =  '|'.join(cssClassNames)
+        regexClassNamesAlternatives = '|'.join(cssClassNames)
         js = f.read()
         f.close()
         jsCssClassRegex = re.compile(JS_CSS_CLASS_REGEX_TEMPLATE % regexClassNamesAlternatives)
@@ -102,20 +114,21 @@ def processJs(jsFilename, cssClassNames):
             processed = []
             for rawItem in items:
                 item = rawItem.strip()
-                if item[0] in ("'", '"'): # string literal
+                if item[0] in ("'", '"'):  # string literal
                     item = item[0] + cssClassPrefix + item[1:]
-                else: # variable
+                else:  # variable
                     item = "'%s'+%s" % (cssClassPrefix, item)
                 processed.append(item)
             newList = ','.join(processed)
             js = js[0:match.start(3)] + newList + js[match.end(3):]
-            match = jqueryCssClassRegex.search(js, match.start(3)+len(newList))
+            match = jqueryCssClassRegex.search(js, match.start(3) + len(newList))
         # Modify multiple CSS classes that are referenced in a single string
         match = JS_JQUERY_REGEX_STRING_MULTIPLE.search(js)
         while match:
-            newList = ' '.join(['%s%s' % (cssClassPrefix, item) if item in cssClassNames else item for item in match.group(3).split(' ')])
+            newList = ' '.join(['%s%s' % (cssClassPrefix, item) if item in cssClassNames else item for item in
+                                match.group(3).split(' ')])
             js = js = js[0:match.start(3)] + newList + js[match.end(3):]
-            match = JS_JQUERY_REGEX_STRING_MULTIPLE.search(js, match.start(3)+len(newList))
+            match = JS_JQUERY_REGEX_STRING_MULTIPLE.search(js, match.start(3) + len(newList))
         # In-line conditional JQuery has/add/removeClass calls
         jqueryCssClassRegex = re.compile(JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE % regexClassNamesAlternatives)
         js = jqueryCssClassRegex.sub(r'\1%s\3\4' % cssClassPrefix, js)
@@ -137,38 +150,52 @@ def processJs(jsFilename, cssClassNames):
         jsEdgeCase1Regex = re.compile(JS_EDGE_CASE_1_TEMPLATE % regexClassNamesAlternatives)
         js = jsEdgeCase1Regex.sub(r'\1%s\2\3' % cssClassPrefix, js)
         # Write the output file
-        processedFilename = jsFilename[:-3] + '.prefixed.js'
-        f = open(processedFilename, 'w')
+        processedFilename = os.path.splitext(os.path.basename(jsFilename))[0] + '.prefixed.js'
+        processedFilenamePath = os.path.normpath(os.path.join(args.jsdest, processedFilename))
+        f = open(processedFilenamePath, 'w')
         f.write(js)
         f.close()
-        print(' Prefixed JavaScript file written as:', processedFilename)
+        print(' |-> Prefixed file written to: ' + processedFilenamePath)
+        print('---------------------------------------------------------')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Bootstrap namespace prefixer')
-    parser.add_argument('-c', '--css', help='Path to the folder where are located the Bootstrap css file', required=True)
-    parser.add_argument('-j', '--js', help='Path to the folder where are located the Bootstrap js file', required=False)
+    parser.add_argument('-c', '--csssource', help='Path to the folder where are located the Bootstrap css file',
+                        required=True)
+    parser.add_argument('-d', '--cssdest', help='Path to the folder where the prefixed css files will be created',
+                        required=True)
+    parser.add_argument('-j', '--jssource', help='Path to the folder where are located the Bootstrap js file',
+                        required=False)
+    parser.add_argument('-t', '--jsdest', help='Path to the folder where the prefixed js files will be created',
+                        required=False)
     parser.add_argument('-p', '--prefix', help='Class prefix (default: bs-)', required=False)
     args = parser.parse_args()
+
+    if args.csssource == 'undefined':
+        raise ValueError('Parameter --csssource cannot be empty')
+
+    if args.cssdest == 'undefined':
+        raise ValueError('Parameter --cssdest cannot be empty')
 
     if not args.prefix:
         cssClassPrefix = DEFAULT_CSS_CLASS_PREFIX
     else:
         cssClassPrefix = args.prefix
 
-    bsTopDir = sys.argv[1]
     cssClassNames = None
     for cssFile in ('bootstrap.css', 'bootstrap.min.css', 'bootstrap-responsive.css', 'bootstrap-responsive.min.css',
                     'bootstrap-theme.css', 'bootstrap-theme.min.css'):
-        cssFilePath = os.path.normpath(os.path.join(args.css, cssFile))
+        cssFilePath = os.path.normpath(os.path.join(args.csssource, cssFile))
         processCss(cssFilePath)
         if cssClassNames == None:
             cssClassNames = collectCssClassnames(cssFilePath)
 
     if cssClassNames != None:
         cssClassNames.update(ADDITIONAL_CSS_CLASSES_IN_JS)
-        for jsFile in ('bootstrap.js', 'bootstrap.min.js'):
-            jsFilePath = os.path.normpath(os.path.join(args.js, jsFile))
-            processJs(jsFilePath, cssClassNames)
+        if args.jssource and args.jsdest:
+            for jsFile in ('bootstrap.js', 'bootstrap.min.js'):
+                jsFilePath = os.path.normpath(os.path.join(args.jssource, jsFile))
+                processJs(jsFilePath, cssClassNames)
     else:
         print('Failed to collect CSS class names - cannot modify JavaScript source files as a result')
