@@ -19,7 +19,7 @@ ADDITIONAL_CSS_CLASSES_IN_JS = ['collapsed']
 # Note: regex uses semi-Python-specific \n (newline) character
 # CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n\}\(]*[\{,])') # e.g: .classname {
 CSS_CLASS_REGEX = re.compile(
-    r'(?<!progid:DXImageTransform)(?<!progid:DXImageTransform.Microsoft)(?!\.png)\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n]*[\{,])')  # e.g: .classname {
+    r'(?<!progid:DXImageTransform)(?<!progid:DXImageTransform.Microsoft)(?!\.png|\.eot|\.woff|\.ttf|\.svg)\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n]*[\{,])')  # e.g: .classname {
 CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX = re.compile(
     r'(\[\s*class\s*[~|*^]?=\s*"\s*)([a-zA-Z][a-zA-Z0-9-_]+\w*)(")(?=[^\{,\n\}]*[\{,])')  # e.g: [class~="someclass-"]
 JS_CSS_CLASS_REGEX_TEMPLATE = r"""(?<!(.\.on|\.off))(\(['"][^'"]*\.)(%s)([^'"]*['"]\))"""
