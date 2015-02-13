@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 """ Add a configurable prefix to the specified css and js Bootstrap files (also work with minified version)
 @author Francois Aucamp <francois.aucamp@gmail.com>
 @license GPLv2+
